@@ -8,6 +8,7 @@ public class Application {
     private static final String DB_CONNECTION_PATH = "jdbc:postgresql://127.0.0.1:5432/sqlcmd";
     private static final String DB_USER = "sqlcmd";
     private static final String DB_PASSWORD = "sqlcmd";
+    private static final String TABLE_NAME = "user";
     private Connection connection;
 
 
@@ -18,27 +19,53 @@ public class Application {
     public void simpleSQL() throws SQLException {
         checkJDBCDriver();
         createDbConnection();
+        dropTableWithName(TABLE_NAME);
         showExistingTables();
-
+        createTable(TABLE_NAME);
         connection.close();
     }
 
+    private void dropTableWithName(String user) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            String sql = "DROP TABLE IF EXISTS \"" + user + "\" CASCADE ;";
+            statement.executeUpdate(sql);
+        }
+    }
+
+    private void createTable(String tableName) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            String sql = "CREATE TABLE public.\"" + tableName + "\"" + "\n"
+                    + "(" + "\n"
+                    + "id SERIAL PRIMARY KEY ," + "\n"
+                    + "name TEXT  NOT NULL," + "\n"
+                    + "password TEXT  NOT NULL" + "\n"
+                    + ")";
+            statement.executeUpdate(sql);
+            showExistingTables();
+        }
+    }
+
     private void showExistingTables() {
-        try {
-            DatabaseMetaData md = connection.getMetaData();
-            ResultSet rs = md.getTables("sqlcmd", "public", "%", null);
+        try (Statement statement = connection.createStatement()) {
+            String quary = "SELECT" + "\n"
+                    + "*" + "\n"
+                    + "FROM" + "\n"
+                    + "pg_catalog.pg_tables" + "\n"
+                    + "WHERE" + "\n"
+                    + "schemaname != 'pg_catalog'" + "\n"
+                    + "AND schemaname != 'information_schema';";
+            ResultSet rs = statement.executeQuery(quary);
             System.out.println("Existing Tables:");
             if (rs.isBeforeFirst()) {
                 while (rs.next()) {
-                    System.out.println("-" + rs.getString(3));
+                    System.out.println("-" + rs.getString("tablename"));
                 }
             } else {
-                System.out.println("db is empty");
+                System.out.println("db is empty" + "\n");
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
     }
 
     private void createDbConnection() {
@@ -61,7 +88,6 @@ public class Application {
         try {
             Class.forName(POSTGRESQL_DRIVER);
         } catch (ClassNotFoundException e) {
-
             System.out.println("Where is your PostgreSQL JDBC Driver? "
                     + "Include in your library path!");
             e.printStackTrace();
