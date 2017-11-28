@@ -1,11 +1,15 @@
-package juja;
+package juja.sqlcmd;
 
-import juja.sqlcmd.Application;
 import org.junit.Test;
 
 public class ApplicationTest {
     @Test
     public void testLoadApplication() {
         new Application();
+    }
+
+    @Test
+    public void testConnectionToDataBase() {
+
     }
 }
