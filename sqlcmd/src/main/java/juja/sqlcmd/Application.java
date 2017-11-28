@@ -23,12 +23,12 @@ public class Application {
         showExistingTables();
         createTable(TABLE_NAME);
         for (int i = 1; i < 4; i++) {
-            addUserToTable("user" + i, "password" + i);
+            addUser("user" + i, "password" + i);
         }
         connection.close();
     }
 
-    private void addUserToTable(String userName, String userPassword) throws SQLException {
+    private void addUser(String userName, String userPassword) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             // Why didn't suit here such expression "INSERT INTO public." + "\"" + TABLE_NAME + "\"" + "(password, name) "
             //                                      + "VALUES (" + userPassword + ", " + userName + ");";
