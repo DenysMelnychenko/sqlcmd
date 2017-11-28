@@ -22,39 +22,51 @@ public class Application {
         dropTableWithName(TABLE_NAME);
         showExistingTables();
         createTable(TABLE_NAME);
+        for (int i = 1; i < 4; i++) {
+            addUserToTable("user" + i, "password" + i);
+        }
         connection.close();
+    }
+
+    private void addUserToTable(String userName, String userPassword) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            // Why didn't suit here such expression "INSERT INTO public." + "\"" + TABLE_NAME + "\"" + "(password, name) "
+            //                                      + "VALUES (" + userPassword + ", " + userName + ");";
+            String sqlQuery = String.format("INSERT INTO \"" + TABLE_NAME + "\"(name, password) VALUES('%s','%s') ", userName, userPassword);
+            statement.executeUpdate(sqlQuery);
+        }
     }
 
     private void dropTableWithName(String user) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            String sql = "DROP TABLE IF EXISTS \"" + user + "\" CASCADE ;";
-            statement.executeUpdate(sql);
+            String sqlQuery = "DROP TABLE IF EXISTS \"" + user + "\" CASCADE ;";
+            statement.executeUpdate(sqlQuery);
         }
     }
 
     private void createTable(String tableName) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            String sql = "CREATE TABLE public.\"" + tableName + "\"" + "\n"
+            String sqlQuery = "CREATE TABLE public.\"" + tableName + "\"" + "\n"
                     + "(" + "\n"
                     + "id SERIAL PRIMARY KEY ," + "\n"
                     + "name TEXT  NOT NULL," + "\n"
                     + "password TEXT  NOT NULL" + "\n"
                     + ")";
-            statement.executeUpdate(sql);
+            statement.executeUpdate(sqlQuery);
             showExistingTables();
         }
     }
 
     private void showExistingTables() {
         try (Statement statement = connection.createStatement()) {
-            String quary = "SELECT" + "\n"
+            String sqlQuery = "SELECT" + "\n"
                     + "*" + "\n"
                     + "FROM" + "\n"
                     + "pg_catalog.pg_tables" + "\n"
                     + "WHERE" + "\n"
                     + "schemaname != 'pg_catalog'" + "\n"
                     + "AND schemaname != 'information_schema';";
-            ResultSet rs = statement.executeQuery(quary);
+            ResultSet rs = statement.executeQuery(sqlQuery);
             System.out.println("Existing Tables:");
             if (rs.isBeforeFirst()) {
                 while (rs.next()) {
