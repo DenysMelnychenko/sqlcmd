@@ -20,20 +20,65 @@ public class Application {
         checkJDBCDriver();
         createDbConnection();
         dropTableWithName(TABLE_NAME);
-        showExistingTables();
+        showExistingTablesName();
         createTable(TABLE_NAME);
         for (int i = 1; i < 4; i++) {
             addUser("user" + i, "password" + i);
         }
+        showExistingTablesName();
+        showExistingRecordsOfTable(TABLE_NAME);
+        updateDataByTitle("user2", "userchange1", TABLE_NAME, "name");
+        showExistingRecordsOfTable(TABLE_NAME);
+        deleteCortegeByTitle(TABLE_NAME, "name", "user3");
+        showExistingRecordsOfTable(TABLE_NAME);
         connection.close();
+    }
+
+    private void deleteCortegeByTitle(String tableName, String columnName, String title) throws SQLException {
+        String sqlQuery = String.format("DELETE FROM \"%1$s\" WHERE %2$s = ? ", tableName, columnName);
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
+            preparedStatement.setString(1, title);
+            preparedStatement.executeUpdate();
+        }
+    }
+
+    private void updateDataByTitle(String oldData, String newData, String tableName, String columnName) throws SQLException {
+        String sqlQuery = String.format("UPDATE \"%3$s\" SET %4$s = \'%2$s\' WHERE %4$s = \'%1s\';", oldData, newData, tableName, columnName);
+        try (Statement statement = connection.createStatement()) {
+            statement.executeUpdate(sqlQuery);
+        }
+    }
+
+    private void showExistingRecordsOfTable(String tableName) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            if (tableName != null) {
+                String sqlQuery = String.format("SELECT * FROM \"%s\"", tableName);
+                ResultSet resultSet = statement.executeQuery(sqlQuery);
+                int columnCount = resultSet.getMetaData().getColumnCount();
+
+                StringBuilder tableData = new StringBuilder();
+                while (resultSet.next()) {
+                    for (int i = 1; i <= columnCount; i++) {
+                        tableData.append(resultSet.getString(i)).append(" | ");
+                    }
+                    tableData.replace(tableData.length() - 3, tableData.length(), System.lineSeparator());
+                }
+                System.out.println(tableData.toString());
+            }
+        }
+
     }
 
     private void addUser(String userName, String userPassword) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            // Why didn't suit here such expression "INSERT INTO public." + "\"" + TABLE_NAME + "\"" + "(password, name) "
-            //                                      + "VALUES (" + userPassword + ", " + userName + ");";
-            String sqlQuery = String.format("INSERT INTO \"" + TABLE_NAME + "\"(name, password) VALUES('%s','%s') ", userName, userPassword);
-            statement.executeUpdate(sqlQuery);
+            if (userName != null && userPassword != null) {
+                // Why didn't suit here such expression "INSERT INTO public." + "\"" + TABLE_NAME + "\"" + "(password, name) "
+                //                                      + "VALUES (" + userPassword + ", " + userName + ");";
+                String sqlQuery = String.format("INSERT INTO \"" + TABLE_NAME + "\"(name, password) VALUES('%s','%s') ", userName, userPassword);
+                statement.executeUpdate(sqlQuery);
+            } else {
+                System.out.println("Wrong input");
+            }
         }
     }
 
@@ -53,11 +98,10 @@ public class Application {
                     + "password TEXT  NOT NULL" + "\n"
                     + ")";
             statement.executeUpdate(sqlQuery);
-            showExistingTables();
         }
     }
 
-    private void showExistingTables() {
+    private void showExistingTablesName() throws SQLException {
         try (Statement statement = connection.createStatement()) {
             String sqlQuery = "SELECT" + "\n"
                     + "*" + "\n"
@@ -70,13 +114,11 @@ public class Application {
             System.out.println("Existing Tables:");
             if (rs.isBeforeFirst()) {
                 while (rs.next()) {
-                    System.out.println("-" + rs.getString("tablename"));
+                    System.out.println("-" + rs.getString("tablename") + "\n");
                 }
             } else {
                 System.out.println("db is empty" + "\n");
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
