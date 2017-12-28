@@ -45,15 +45,10 @@ public class DatabaseManager {
         }
     }
 
-    public boolean close() {
-        try {
+    public void close() throws SQLException {
+        if (connection != null && !connection.isClosed()) {
             connection.close();
-            return true;
-        } catch (SQLException | NullPointerException e) {
-            e.printStackTrace();
-            return false;
         }
-
     }
 
     private int numberOfTables(ResultSet resultSet) throws SQLException {
